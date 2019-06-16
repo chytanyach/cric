@@ -5,6 +5,7 @@ from requests import get
 from selenium.webdriver.common.keys import Keys
 from contextlib import closing
 from constants import *
+#from MainModule import *
 import pandas as pd
 
 
@@ -130,8 +131,9 @@ def find_player_from_file(name):
     pid=''
     data = pd.read_csv('E:/cricbuzz/files/players.txt', sep=",", header=None)
     data.columns = ["player_name","id"]
-    pid=data[data.player_name == name].id
-    if(len(pid) == 0):
+    pidDF=data.loc[data.player_name == name]
+    pid=pidDF["id"].values[0]
+    if(len(str(pid)) == 0):
             words=find_words(name)
             pid=find_player_id(words)
             file= open("E:/cricbuzz/files/players.txt","a+")
@@ -143,9 +145,7 @@ def find_player_from_file(name):
 #create a function to find the player id
 def find_player_id(words):
     #for x in words:
-
-
-    raw_html1=simple_get(f'{player_stats_url}{words[1]}')
+    raw_html1=simple_get(f'{player_name_url}{words[1]}')
     html1 = BeautifulSoup(raw_html1, 'html.parser')
     id=''
 
@@ -157,3 +157,51 @@ def find_player_id(words):
 
     return id
     
+def get_player_stats(name,id):
+    player_url=f'{player_stats_url}{id}'
+    player_stats_path=f'{stats_path}{name}.txt'
+    raw_html2=simple_get(player_stats_url)
+    html2 = BeautifulSoup(raw_html2, 'html.parser')
+    table = html2.find_all('table',attrs={'class':'TableLined'})
+    tab=table[0]
+    print('player url is ',player_url)
+    with open (player_stats_path,'w+') as r:
+        for row in tab.find_all('tr'):
+            for y in row.find_all('td'):
+                if not (("Progressive" in y.text) or ("Innings" in y.text) or ("nbsp" in y.text)):
+                    line=f'{y.text.strip()};'
+                    r.write(line)
+            r.write('\n')
+
+def remove_ast(runs):
+    num = re.sub(r'\D', " ", str(runs))
+    return int(num)
+
+def read_player_stats(name):
+    # words=name.split(" ")
+    player_stats_path=f'{stats_path}{name}.txt'
+    print("player_stats_path while reading ",player_stats_path)
+    player_data = pd.read_csv(player_stats_path, sep=";", header='infer',skiprows=2, skipfooter=1,engine='python',dtype=str)
+    player_data.columns = ["Match_Number","Date","Versus","Ground","Dismissed","Runs","Balls_Faced","Strike_Rate","Extra1","Runs_Cumulative","Average","Strike_Rate","Extra2"]
+    player_data.Runs=player_data.Runs.replace(to_replace="-", value=0, inplace=False, limit=None, regex=False, method='pad')
+    player_data['Runs'] = player_data['Runs'].apply(lambda x: remove_ast(x))
+
+    return player_data
+
+def total_average_func(player_data):
+    return player_data.tail(n=1).Average
+
+def latest_average_func(player_data):
+    return player_data["Runs"].tail(n=5).mean()
+
+def avg_versus_opp_func(player_data):
+    opposition="England"
+    player_ver_opp_df=player_data.loc[player_data['Versus'] == opposition]
+    player_ver_opp=player_ver_opp_df['Runs'].tail(n=5).mean()
+    return player_ver_opp
+
+def avg_in_ground_func(player_data):
+    venue="Kennington Oval"
+    player_in_ground_df=player_data.loc[player_data['Ground']== venue]
+    player_in_ground=player_in_ground_df['Runs'].mean()
+    return player_in_ground
