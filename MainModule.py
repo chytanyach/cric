@@ -21,8 +21,9 @@ venue_name=''
 average_first_innings_score=0
 average_second_innings_score=0
 
-#def my_func():
-#    print("in utilities")
+# to-do:
+# 	Multiple Players with same first name and last name has to be handled
+# 	opposition needs to be handled
 
 my_func()
 driver = webdriver.Chrome(executable_path=web_drive_executable_path)
@@ -41,12 +42,11 @@ def venue_details_func(html):
 
 if __name__ == "__main__":
 
+	print("Started")
 	raw_html = simple_get(playing_squad_url)
 	html = BeautifulSoup(raw_html, 'html.parser')
 
-	#venue_details_func(html)
-	#venue details
-	
+	#opposition hardcoded for now
 	opposition="England"
 
 	players=find_players(html)
@@ -67,11 +67,14 @@ if __name__ == "__main__":
 	average_second_innings_score=int(venue_details[1].text)
 
 
-	print("venue is ",venue_name)
-	print("average first Innings score is ",average_first_innings_score)
-	print("average second Innings score is ",average_second_innings_score)
-	print("players and ids are")
-	for x in final_squad_objects:
-		print(f"name-{x.name} ## id-{x.id} ## avg-{x.total_average} ## lat_avg-{x.latest_average} ## avo-{x.avg_versus_opp} ## aig-{x.avg_in_ground}")
+	write_squad_stats(final_squad_objects)
 
+	with open (output_venue_path,'w+') as r:
+		temp=f'venue is {venue_name}\n'
+		r.write(temp)
+		temp=f'average first Innings score is {average_first_innings_score}\n'
+		r.write(temp)
+		temp=f'average second Innings score is {average_second_innings_score}'
+		r.write(temp)
 
+	print('completed')

@@ -7,6 +7,7 @@ from contextlib import closing
 from constants import *
 #from MainModule import *
 import pandas as pd
+import unicodedata
 
 
 
@@ -89,21 +90,39 @@ def find_words(name):
     return name.split(" ")
 
 
+def find_correct_id(ids,words):
+    for x in ids:
+        temp_url=f'{player_overview_url}{x}'
+        raw_html4=simple_get(temp_url)
+        html4 = BeautifulSoup(raw_html4, 'html.parser')
+        name=html4.findAll('td', attrs={'TextGreenBold12'})
+        unicode_str = unicodedata.normalize("NFKD",name[0].text.strip())
+        temp=unicode_str.replace('\t', ' ')
+        temp=unicode_str.replace('\n', ' ')
+        plyr_name=temp.split(" ")
+        if(words[0] == plyr_name[0]):
+            return x
+            break
+
+
 def find_func1(words,html1):
     player_name=f'{words[1]}, {words[0][0]}'
-    id=''
+    ids=[]
     for a in html1.findAll('a', attrs={'LinkNormal'}):
         if(player_name in a.text):
-            id=a['href'].split("=")[1]
-            break
-        
-    return id
+            ids.append(a['href'].split("=")[1])
+    
+    if(len(ids)==1):
+        return str(ids[0])
+    elif(len(ids) > 1):
+        id=find_correct_id(ids,words)
+        return str(id)
             
 
 
 def find_func2(words,html1):
     player_name=f'{words[1]},  {words[0][0]}'
-    id=''
+    #id=''
     for a in html1.findAll('a', attrs={'LinkNormal'}):
         words1=(a.text).split(" ")
         if( len(words1) == 3):
@@ -111,20 +130,24 @@ def find_func2(words,html1):
             regexPattern = re.compile(name)
             if(regexPattern.fullmatch(player_name)):
                 id=a['href'].split("=")[1]
+                return str(id)
                 break
-    return id
+    
 
 def find_func3(words):
-    raw_html1=simple_get(f'{player_stats_url}{words[0][0]}')
-    html1 = BeautifulSoup(raw_html1, 'html.parser')
+    url=f'{player_name_url}{words[0][0]}'
+    raw_html1=simple_get(url)
+    html1=BeautifulSoup(raw_html1,'html.parser')
     id=''
 
     player_name=f'{words[0]} {words[1]}'
+    print('player name in func3 is',player_name)
     for a in html1.findAll('a', attrs={'LinkNormal'}):
         if(player_name in a.text):
             id=a['href'].split("=")[1]
-            break  
-    return id
+            print('id is',id)
+            return str(id)
+            break
 
 
 def find_player_from_file(name):
@@ -132,11 +155,15 @@ def find_player_from_file(name):
     data = pd.read_csv('E:/cricbuzz/files/players.txt', sep=",", header=None)
     data.columns = ["player_name","id"]
     pidDF=data.loc[data.player_name == name]
-    pid=pidDF["id"].values[0]
+        
+    if(len(pidDF) > 0):
+        pid=pidDF["id"].values[0]
+
     if(len(str(pid)) == 0):
             words=find_words(name)
             pid=find_player_id(words)
             file= open("E:/cricbuzz/files/players.txt","a+")
+            file.write('\n')
             line=f'{name},{pid}\n'
             file.write(f'{line}')
             file.close()
@@ -150,21 +177,20 @@ def find_player_id(words):
     id=''
 
     id=find_func1(words,html1)
-    if(len(id) ==  0):
+    if(id is None):
         id=find_func2(words,html1)
-        if(len(id) ==  0):
+        if(id is None):
             id=find_func3(words)
 
-    return id
+    return str(id)
     
 def get_player_stats(name,id):
     player_url=f'{player_stats_url}{id}'
     player_stats_path=f'{stats_path}{name}.txt'
-    raw_html2=simple_get(player_stats_url)
+    raw_html2=simple_get(player_url)
     html2 = BeautifulSoup(raw_html2, 'html.parser')
     table = html2.find_all('table',attrs={'class':'TableLined'})
     tab=table[0]
-    print('player url is ',player_url)
     with open (player_stats_path,'w+') as r:
         for row in tab.find_all('tr'):
             for y in row.find_all('td'):
@@ -179,8 +205,8 @@ def remove_ast(runs):
 
 def read_player_stats(name):
     # words=name.split(" ")
+    player_data=''
     player_stats_path=f'{stats_path}{name}.txt'
-    print("player_stats_path while reading ",player_stats_path)
     player_data = pd.read_csv(player_stats_path, sep=";", header='infer',skiprows=2, skipfooter=1,engine='python',dtype=str)
     player_data.columns = ["Match_Number","Date","Versus","Ground","Dismissed","Runs","Balls_Faced","Strike_Rate","Extra1","Runs_Cumulative","Average","Strike_Rate","Extra2"]
     player_data.Runs=player_data.Runs.replace(to_replace="-", value=0, inplace=False, limit=None, regex=False, method='pad')
@@ -189,19 +215,58 @@ def read_player_stats(name):
     return player_data
 
 def total_average_func(player_data):
-    return player_data.tail(n=1).Average
+    averageDF=player_data.tail(n=1)
+    average=averageDF['Average'].values[0]
+    return average
+    # if (average != 0):
+    #     return average
+    # else:
+    #     return 0
 
 def latest_average_func(player_data):
-    return player_data["Runs"].tail(n=5).mean()
+    latest_average=player_data["Runs"].tail(n=5).mean()
+    return latest_average
+    # if (latest_average != 0):
+    #     return latest_average
+    # else:
+    #     return 0
 
 def avg_versus_opp_func(player_data):
     opposition="England"
     player_ver_opp_df=player_data.loc[player_data['Versus'] == opposition]
     player_ver_opp=player_ver_opp_df['Runs'].tail(n=5).mean()
-    return player_ver_opp
+    if (player_ver_opp != 0):
+        return player_ver_opp
+    else:
+        return 0
 
 def avg_in_ground_func(player_data):
     venue="Kennington Oval"
     player_in_ground_df=player_data.loc[player_data['Ground']== venue]
     player_in_ground=player_in_ground_df['Runs'].mean()
-    return player_in_ground
+    if (player_in_ground != 0):
+        return player_in_ground
+    else:
+        return 0
+ 
+
+def find_id_name(id):
+    temp_url=f'{player_overview_url}{id}'
+    raw_html4=simple_get(temp_url)
+    html4 = BeautifulSoup(raw_html4, 'html.parser')
+    name=html4.findAll('td', attrs={'TextGreenBold12'})
+
+    unicode_str = unicodedata.normalize("NFKD",name[0].text.strip())
+    temp=unicode_str.replace('\t', ' ')
+    temp=unicode_str.replace('\n', ' ')
+    temp=temp.strip()
+    return temp
+
+
+
+def write_squad_stats(final_squad_objects):
+    with open (output_stats_path,'w+') as r:
+        for x in final_squad_objects:
+            row=f'{x.name};{x.id};{x.id_name};{x.total_average};{x.latest_average};{x.avg_versus_opp};{x.avg_in_ground}\n'
+            r.write(row)
+    

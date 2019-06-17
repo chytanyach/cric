@@ -3,3 +3,6 @@ playing_squad_url='https://www.cricbuzz.com/cricket-match-facts/20250/ind-vs-aus
 player_name_url='http://www.howstat.com/cricket/Statistics/Players/PlayerList.asp?Country=ALL&Group='
 player_stats_url='http://howstat.com/cricket/Statistics/Players/PlayerProgressBat_ODI.asp?PlayerID='
 stats_path='E:/cricbuzz/players/'
+player_overview_url='http://howstat.com/cricket/Statistics/Players/PlayerOverviewSummary.asp?PlayerID='
+output_stats_path='E:/cricbuzz/output/squad_stats.txt'
+output_venue_path='E:/cricbuzz/output/venue_details.txt'

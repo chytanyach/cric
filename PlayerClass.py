@@ -6,10 +6,11 @@ class Player:
     id=''
     first_letters=[]
     words=[]
-    total_average=0
-    latest_average=0
-    avg_versus_opp=0
-    avg_in_ground=0
+    id_name=''
+    # total_average=0
+    # latest_average=0
+    # avg_versus_opp=0
+    # avg_in_ground=0
 
     def __init__(self, name):
         self.name = name
@@ -17,8 +18,30 @@ class Player:
         self.id=find_player_from_file(name)
         get_player_stats(self.name,self.id)
         player_data=read_player_stats(name)
+        self.id_name=find_id_name(self.id)
+        # self.total_average=0
+        self.total_average=total_average_func(player_data) 
+        # if (temp != 0 ):
+        # 	self.total_average=temp
         
-        self.total_average=total_average_func(player_data)
+        # self.latest_average=0
         self.latest_average=latest_average_func(player_data)
+        # if (temp != 0 ):
+        # 	self.latest_average=temp
+
+        # self.avg_versus_opp=0
         self.avg_versus_opp=avg_versus_opp_func(player_data)
+        # if (temp != 0 ):
+        # 	self.avg_versus_opp=temp
+
+
+        # self.avg_in_ground=0
         self.avg_in_ground=avg_in_ground_func(player_data)
+
+        
+        # if (temp != 0 ):
+        # 	self.avg_in_ground=temp
+
+        # self.latest_average=latest_average_func(player_data)
+        # self.avg_versus_opp=avg_versus_opp_func(player_data)
+        # self.avg_in_ground=avg_in_ground_func(player_data)
