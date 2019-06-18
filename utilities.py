@@ -231,8 +231,14 @@ def latest_average_func(player_data):
     # else:
     #     return 0
 
-def avg_versus_opp_func(player_data):
-    opposition="England"
+def avg_versus_opp_func(player_data,id,team1,team2):
+    opposition=''
+    team_name=get_team_name(id)
+    if(team_name.lower() == team1.lower()):
+        opposition=team2
+    else:
+        opposition=team1
+    print("opposition is ",opposition)
     player_ver_opp_df=player_data.loc[player_data['Versus'] == opposition]
     player_ver_opp=player_ver_opp_df['Runs'].tail(n=5).mean()
     if (player_ver_opp != 0):
@@ -240,8 +246,7 @@ def avg_versus_opp_func(player_data):
     else:
         return 0
 
-def avg_in_ground_func(player_data):
-    venue="Kennington Oval"
+def avg_in_ground_func(player_data,venue):
     player_in_ground_df=player_data.loc[player_data['Ground']== venue]
     player_in_ground=player_in_ground_df['Runs'].mean()
     if (player_in_ground != 0):
@@ -254,7 +259,7 @@ def find_id_name(id):
     temp_url=f'{player_overview_url}{id}'
     raw_html4=simple_get(temp_url)
     html4 = BeautifulSoup(raw_html4, 'html.parser')
-    name=html4.findAll('td', attrs={'TextGreenBold12'})
+    name=html4.findAll('td', attrs={'TextGreenBold12'}) 
 
     unicode_str = unicodedata.normalize("NFKD",name[0].text.strip())
     temp=unicode_str.replace('\t', ' ')
@@ -269,4 +274,41 @@ def write_squad_stats(final_squad_objects):
         for x in final_squad_objects:
             row=f'{x.name};{x.id};{x.id_name};{x.total_average};{x.latest_average};{x.avg_versus_opp};{x.avg_in_ground}\n'
             r.write(row)
-    
+
+def get_teams():
+    raw_html5=simple_get(playing_squad_url)
+    html5 = BeautifulSoup(raw_html5, 'html.parser')
+    name=html5.findAll('h1', attrs={'cb-nav-hdr cb-font-18 line-ht24'})
+    words=name[0].text.split(" ")
+    return words
+
+def player_team(id):
+    temp_url=f'{player_overview_url}{id}'
+    raw_html4=simple_get(temp_url)
+    html4 = BeautifulSoup(raw_html4, 'html.parser')
+    line=html4.findAll('td', attrs={'TextGreenBold12'})
+
+
+def get_team_name(id):
+    # teams=get_teams()
+    # team1=teams[0]
+    # team2=teams[2].split(",")[0]
+    team_url=f'{team_name_url}{id}'
+    raw_html4=simple_get(team_url)
+    html4 = BeautifulSoup(raw_html4, 'html.parser')
+    line=html4.findAll('td', attrs={'TextGreenBold12'})
+    name=line[0].text.strip()
+    new_str = unicodedata.normalize("NFKD", name)
+    temp=new_str.replace('\t', ' ')
+    temp=new_str.replace('\n', ' ')
+    line=temp.split(" ")
+    team_name=line[len(line)-1]
+    team_name=team_name[1:-1]
+    return team_name
+    # if(team_name.lower() == team1.lower()):
+    #     return team2
+    # else:
+    #     return team1    
+
+
+
