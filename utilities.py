@@ -5,9 +5,11 @@ from requests import get
 from selenium.webdriver.common.keys import Keys
 from contextlib import closing
 from constants import *
+from datetime import datetime
 #from MainModule import *
 import pandas as pd
 import unicodedata
+import os
 
 
 
@@ -90,22 +92,69 @@ def find_words(name):
     return name.split(" ")
 
 
-def find_correct_id(ids,words):
+
+def get_cricbuzz_dob(name):
+    raw_html5=simple_get(playing_squad_url)
+    html5 = BeautifulSoup(raw_html5, 'html.parser')
+    profile_id_url=''
+
+    line=html5.findAll('a', attrs={'class':'text-hvr-underline'})
+    for x in line:
+        if (name in x.text):
+            profile_id_url=x['href']
+            break
+
+    profile_cricbuzz_url=f'{cricbuzz_url}{profile_id_url}'
+
+    raw_html6=simple_get(profile_cricbuzz_url)
+    html6 = BeautifulSoup(raw_html6, 'html.parser')
+
+    line=html6.findAll('div', attrs={'class':'cb-col cb-col-60 cb-lst-itm-sm'})
+    dob_cricbuzz=line[0].text.strip()
+    dob_cricbuzz=dob_cricbuzz[:12]
+    return dob_cricbuzz
+
+
+
+def compare_dob_func(html,name):
+    line=html.findAll('table', attrs={'border':'0', 'width':'100%', 'cellpadding':'2', 'cellspacing':'0'})
+
+    rows=line[0].findAll('td')
+    dob_howstat=rows[6].text.strip()
+    dob_cricbuzz=get_cricbuzz_dob(name)
+
+    date_cricbuzz = datetime.strptime(dob_cricbuzz, '%b %d, %Y')
+    date_howstat = datetime.strptime(dob_howstat, '%d/%m/%Y')
+
+    
+    if(date_cricbuzz == date_howstat):
+        return True
+    else:
+        return False
+
+
+
+def find_correct_id(ids,words,name):
     for x in ids:
         temp_url=f'{player_overview_url}{x}'
         raw_html4=simple_get(temp_url)
         html4 = BeautifulSoup(raw_html4, 'html.parser')
-        name=html4.findAll('td', attrs={'TextGreenBold12'})
-        unicode_str = unicodedata.normalize("NFKD",name[0].text.strip())
+        line=html4.findAll('td', attrs={'TextGreenBold12'})
+        unicode_str = unicodedata.normalize("NFKD",line[0].text.strip())
         temp=unicode_str.replace('\t', ' ')
         temp=unicode_str.replace('\n', ' ')
+
+        dob_match=compare_dob_func(html4,name)
+
+        
+
         plyr_name=temp.split(" ")
-        if(words[0] == plyr_name[0]):
+        if(words[0] == plyr_name[0] or dob_match):
             return x
             break
 
 
-def find_func1(words,html1):
+def find_func1(words,html1,name):
     player_name=f'{words[1]}, {words[0][0]}'
     ids=[]
     for a in html1.findAll('a', attrs={'LinkNormal'}):
@@ -115,7 +164,7 @@ def find_func1(words,html1):
     if(len(ids)==1):
         return str(ids[0])
     elif(len(ids) > 1):
-        id=find_correct_id(ids,words)
+        id=find_correct_id(ids,words,name)
         return str(id)
             
 
@@ -141,19 +190,29 @@ def find_func3(words):
     id=''
 
     player_name=f'{words[0]} {words[1]}'
-    print('player name in func3 is',player_name)
     for a in html1.findAll('a', attrs={'LinkNormal'}):
         if(player_name in a.text):
             id=a['href'].split("=")[1]
-            print('id is',id)
             return str(id)
             break
 
 
 def find_player_from_file(name):
+
+    exists = os.path.isfile(players_id_file)
+    data={}
+    if exists:
+        # Store configuration file values
+        data = pd.read_csv(players_id_file, sep=",", header='infer')
+        data.columns = ["player_name","id"]
+    else:
+        # Keep presets
+        line=f'Player,Id\n'
+        with open (players_id_file,'w+') as r:
+            r.write(line)
+
+
     pid=''
-    data = pd.read_csv('E:/cricbuzz/files/players.txt', sep=",", header=None)
-    data.columns = ["player_name","id"]
     pidDF=data.loc[data.player_name == name]
         
     if(len(pidDF) > 0):
@@ -161,8 +220,8 @@ def find_player_from_file(name):
 
     if(len(str(pid)) == 0):
             words=find_words(name)
-            pid=find_player_id(words)
-            file= open("E:/cricbuzz/files/players.txt","a+")
+            pid=find_player_id(words,name)
+            file= open(players_id_file,"a+")
             file.write('\n')
             line=f'{name},{pid}\n'
             file.write(f'{line}')
@@ -170,13 +229,13 @@ def find_player_from_file(name):
     return pid
 
 #create a function to find the player id
-def find_player_id(words):
+def find_player_id(words,name):
     #for x in words:
     raw_html1=simple_get(f'{player_name_url}{words[1]}')
     html1 = BeautifulSoup(raw_html1, 'html.parser')
     id=''
 
-    id=find_func1(words,html1)
+    id=find_func1(words,html1,name)
     if(id is None):
         id=find_func2(words,html1)
         if(id is None):
@@ -186,6 +245,7 @@ def find_player_id(words):
     
 def get_player_stats(name,id):
     player_url=f'{player_stats_url}{id}'
+    print('player url in get player stats',player_url)
     player_stats_path=f'{stats_path}{name}.txt'
     raw_html2=simple_get(player_url)
     html2 = BeautifulSoup(raw_html2, 'html.parser')

@@ -1,4 +1,4 @@
-name,id
+Player,Id
 
 MS Dhoni,3243
 
@@ -13,6 +13,7 @@ Bhuvneshwar Kumar,3991
 Kedar Jadhav,4033
 
 Yuzvendra Chahal,4063
+
 Kuldeep Yadav,4652
 
 Lokesh Rahul,4137
@@ -24,7 +25,6 @@ Hardik Pandya,4399
 Aaron Finch,3845
 
 David Warner,3637
-
 Steven Smith,3756
 
 Usman Khawaja,3842
