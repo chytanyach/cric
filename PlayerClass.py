@@ -1,5 +1,6 @@
 from utilities import *
 from constants import *
+from bowlingUtilities import *
 
 
 class Player:
@@ -23,7 +24,7 @@ class Player:
 
         first_letters=find_first_letters(name)
         self.id=find_player_from_file(name)
-        get_player_stats(self.name,self.id)
+        get_player_batting_stats(self.name,self.id)
         player_data=read_player_stats(name)
         self.id_name=find_id_name(self.id)
         # self.total_average=0
@@ -45,7 +46,21 @@ class Player:
         # self.avg_in_ground=0
         self.avg_in_ground=avg_in_ground_func(player_data,self.venue_name)
 
-        
+        ################################bowling stats##################################
+
+        get_player_bowling_stats(self.name,self.id)
+        player_bowling_data=read_player_bowling_stats(name)
+        # print(player_bowling_data)
+        if(len(player_bowling_data) > 0):
+            self.bowl_strike_rate= get_bowl_strike_rate(player_bowling_data)
+            self.bowl_avg_in_ground= get_avg_wick_in_ground(player_bowling_data,self.venue_name)
+            self.latest_bowl_avg= get_latest_bowl_avg(player_bowling_data)
+            self.bowl_avg_versus_opp = get_bowl_avg_versus_opp(player_bowling_data,self.id,self.team1,self.team2)
+        else:
+            self.bowl_strike_rate=0
+            self.bowl_avg_in_ground=0
+            self.latest_bowl_avg=0
+            self.bowl_avg_versus_opp=0
         # if (temp != 0 ):
         # 	self.avg_in_ground=temp
 

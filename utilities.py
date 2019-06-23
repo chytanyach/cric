@@ -243,9 +243,8 @@ def find_player_id(words,name):
 
     return str(id)
     
-def get_player_stats(name,id):
+def get_player_batting_stats(name,id):
     player_url=f'{player_stats_url}{id}'
-    print('player url in get player stats',player_url)
     player_stats_path=f'{stats_path}{name}.txt'
     raw_html2=simple_get(player_url)
     html2 = BeautifulSoup(raw_html2, 'html.parser')
@@ -298,7 +297,6 @@ def avg_versus_opp_func(player_data,id,team1,team2):
         opposition=team2
     else:
         opposition=team1
-    print("opposition is ",opposition)
     player_ver_opp_df=player_data.loc[player_data['Versus'] == opposition]
     player_ver_opp=player_ver_opp_df['Runs'].tail(n=5).mean()
     if (player_ver_opp != 0):

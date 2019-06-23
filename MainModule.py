@@ -4,6 +4,7 @@ from requests import get
 from selenium.webdriver.common.keys import Keys
 from contextlib import closing
 from utilities import *
+from bowlingUtilities import *
 from bs4 import BeautifulSoup
 from constants import *
 from PlayerClass import *
@@ -52,7 +53,7 @@ if __name__ == "__main__":
 
 	#print("final squad is ",final_squad)
 
-
+	# final_squad=["Jasprit Bumrah"]
 	teams=get_teams()
 	team1=teams[0]
 	team2=teams[2].split(",")[0]
@@ -83,6 +84,6 @@ if __name__ == "__main__":
 		final_squad_objects.append(Player(x,team1,team2,venue_name))
 
 	write_squad_stats(final_squad_objects)
-
+	write_bowling_stats(final_squad_objects)
 
 	print('completed')
