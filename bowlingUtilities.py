@@ -57,7 +57,7 @@ def get_bowl_strike_rate(player_data):
 def write_bowling_stats(final_squad_objects):
     with open (output_bowling_stats_path,'w+') as r:
         for x in final_squad_objects:
-            row=f'{x.name};{x.id};{x.id_name};{x.bowl_strike_rate};{x.bowl_avg_in_ground};{x.latest_bowl_avg};{x.bowl_avg_versus_opp}\n'
+            row=f'{x.name};{x.id};{x.id_name};{x.bowl_strike_rate};{x.bowl_avg_in_ground};{x.latest_bowl_avg};{x.bowl_avg_versus_opp};{x.final_bowling_score}\n'
             r.write(row)
 
 def get_latest_bowl_avg(player_data):
@@ -95,9 +95,7 @@ def get_bowl_avg_versus_opp(player_data,id,team1,team2):
     matches_ver_opp_DF=player_data.loc[player_data['Versus'] == opposition]
     matches=len(matches_ver_opp_DF["Date"].unique())
     
-    tempDF=player_data.loc[player_data["Versus"] == opposition]
-    wickets_ver_opp_DF=tempDF.loc[tempDF["Batsman_Out"] != 'nan']
-    
+    wickets_ver_opp_DF=player_data.loc[(player_data["Versus"] == opposition) & (len(str(player_data["Batsman_Out"])) != 3)]
     wickets_versus_opp=len(wickets_ver_opp_DF)
     
     if(wickets_versus_opp != 0 and matches != 0):
@@ -106,7 +104,7 @@ def get_bowl_avg_versus_opp(player_data,id,team1,team2):
         return 0
 
 def get_avg_wick_in_ground(player_data,ground):
-    bowler_in_ground_DF=player_data.loc[(player_data["Ground"] == ground) & (player_data["Batsman_Out"] != 'nan') ]
+    bowler_in_ground_DF=player_data.loc[(player_data["Ground"] == ground) & (len(str(player_data["Batsman_Out"])) != 3) ]
     wickets_in_ground=len(bowler_in_ground_DF)
     matches_in_ground_DF=player_data.loc[player_data["Ground"] == ground]
     matches_in_ground=len(matches_in_ground_DF)
@@ -117,5 +115,26 @@ def get_avg_wick_in_ground(player_data,ground):
 
     else:
         return 0
+
+
+def get_final_bowling_score(bowl_strike_rate,bowl_avg_in_ground,latest_bowl_avg,bowl_avg_versus_opp):
+    if(bowl_strike_rate == 0):
+        final_strike_rate=0
+    else:
+        final_strike_rate=1/bowl_strike_rate
+    
+    final_average=0
+    if(bowl_strike_rate!=0 and bowl_avg_in_ground !=0 and latest_bowl_avg !=0 and bowl_avg_versus_opp!= 0):
+        final_average=(bowl_avg_in_ground+(latest_bowl_avg*3)+(bowl_avg_versus_opp*2))/3
+    elif(bowl_strike_rate!=0 and bowl_avg_in_ground !=0 and latest_bowl_avg !=0 and bowl_avg_versus_opp == 0):
+        final_average=(bowl_avg_in_ground+(latest_bowl_avg*2))/2
+    elif(bowl_strike_rate!=0 and bowl_avg_in_ground ==0 and latest_bowl_avg !=0 and bowl_avg_versus_opp!= 0):
+        final_average=(bowl_avg_versus_opp+(latest_bowl_avg*2))/2
+    elif(bowl_strike_rate!=0 and bowl_avg_in_ground ==0 and latest_bowl_avg !=0 and bowl_avg_versus_opp == 0):
+        final_average=latest_bowl_avg
+    
+
+    final_bowling_score=final_average*final_strike_rate
+    return final_bowling_score
     
     

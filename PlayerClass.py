@@ -43,8 +43,11 @@ class Player:
         # 	self.avg_versus_opp=temp
 
 
-        # self.avg_in_ground=0
+        # self.avg_in_ground=0,
         self.avg_in_ground=avg_in_ground_func(player_data,self.venue_name)
+
+        self.final_batting_score=get_final_batting_score(float(self.total_average),float(self.latest_average),
+            float(self.avg_versus_opp),float(self.avg_in_ground))
 
         ################################bowling stats##################################
 
@@ -52,15 +55,25 @@ class Player:
         player_bowling_data=read_player_bowling_stats(name)
         # print(player_bowling_data)
         if(len(player_bowling_data) > 0):
-            self.bowl_strike_rate= get_bowl_strike_rate(player_bowling_data)
+            bowl_strike_rate= get_bowl_strike_rate(player_bowling_data)
+            if not (math.isnan(float(bowl_strike_rate))):
+                self.bowl_strike_rate=bowl_strike_rate
+            else:
+                self.bowl_strike_rate=0
+
             self.bowl_avg_in_ground= get_avg_wick_in_ground(player_bowling_data,self.venue_name)
             self.latest_bowl_avg= get_latest_bowl_avg(player_bowling_data)
             self.bowl_avg_versus_opp = get_bowl_avg_versus_opp(player_bowling_data,self.id,self.team1,self.team2)
+            self.final_bowling_score=get_final_bowling_score(self.bowl_strike_rate,self.bowl_avg_in_ground,self.latest_bowl_avg,self.bowl_avg_versus_opp)
+        
         else:
             self.bowl_strike_rate=0
             self.bowl_avg_in_ground=0
             self.latest_bowl_avg=0
             self.bowl_avg_versus_opp=0
+            self.final_bowling_score=0
+
+
         # if (temp != 0 ):
         # 	self.avg_in_ground=temp
 

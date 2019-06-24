@@ -245,6 +245,7 @@ def find_player_id(words,name):
     
 def get_player_batting_stats(name,id):
     player_url=f'{player_stats_url}{id}'
+    print(player_url)
     player_stats_path=f'{stats_path}{name}.txt'
     raw_html2=simple_get(player_url)
     html2 = BeautifulSoup(raw_html2, 'html.parser')
@@ -297,6 +298,7 @@ def avg_versus_opp_func(player_data,id,team1,team2):
         opposition=team2
     else:
         opposition=team1
+    print("opposition is ",opposition)
     player_ver_opp_df=player_data.loc[player_data['Versus'] == opposition]
     player_ver_opp=player_ver_opp_df['Runs'].tail(n=5).mean()
     if (player_ver_opp != 0):
@@ -330,7 +332,7 @@ def find_id_name(id):
 def write_squad_stats(final_squad_objects):
     with open (output_stats_path,'w+') as r:
         for x in final_squad_objects:
-            row=f'{x.name};{x.id};{x.id_name};{x.total_average};{x.latest_average};{x.avg_versus_opp};{x.avg_in_ground}\n'
+            row=f'{x.name};{x.id};{x.id_name};{x.total_average};{x.latest_average};{x.avg_versus_opp};{x.avg_in_ground};{x.final_batting_score}\n'
             r.write(row)
 
 def get_teams():
@@ -367,6 +369,30 @@ def get_team_name(id):
     #     return team2
     # else:
     #     return team1    
+
+def get_final_batting_score(total_average,latest_average,avg_versus_opp,avg_in_ground):
+    final_average=0
+    if(total_average !=0 and latest_average != 0 and avg_versus_opp!= 0 and avg_in_ground!= 0):
+        final_average =  ((total_average*2)+(latest_average*3)+(avg_versus_opp*2)+(avg_in_ground))/4    
+    elif(total_average !=0 and latest_average != 0 and avg_versus_opp!= 0 and avg_in_ground == 0):
+        final_average =  ((total_average*2)+(latest_average*3)+(avg_versus_opp))/3
+    elif(total_average !=0 and latest_average != 0 and avg_versus_opp == 0 and avg_in_ground != 0):
+        final_average =  ((total_average*2)+(latest_average*3)+(avg_in_ground))/3
+    elif(total_average !=0 and latest_average != 0 and avg_versus_opp == 0 and avg_in_ground == 0):
+        final_average =  ((total_average)+(latest_average*2))/2
+
+    return final_average
+    
+
+# def get_batting_xi(final_squad_objects):
+#     player_name=[]
+#     batting_score=[]
+#     for x in final_squad_objects:
+#         batting_score.append[x.final_batting_score]
+#         player_name.append[x.name]
+#     return
+
+
 
 
 

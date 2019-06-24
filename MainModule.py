@@ -10,6 +10,7 @@ from constants import *
 from PlayerClass import *
 import xlwt 
 from xlwt import Workbook
+import sys
 
 
 #file = open(r"E:/cricbuzz/players.txt","w+")
@@ -43,6 +44,11 @@ def venue_details_func(html):
 if __name__ == "__main__":
 
 	print("Started")
+
+	playing_squad_url=sys.argv[1]
+	print("match fact url is ",playing_squad_url)
+	# 'https://www.cricbuzz.com/cricket-match-facts/20250/ind-vs-aus-match-14-icc-cricket-world-cup-2019'
+
 	raw_html = simple_get(playing_squad_url)
 	html = BeautifulSoup(raw_html, 'html.parser')
 
