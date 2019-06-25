@@ -39,6 +39,7 @@ class Player:
 
         # self.avg_versus_opp=0
         self.avg_versus_opp=avg_versus_opp_func(player_data,self.id,self.team1,self.team2)
+        # print("avg versus opp in player class ",self.avg_versus_opp)
         # if (temp != 0 ):
         # 	self.avg_versus_opp=temp
 

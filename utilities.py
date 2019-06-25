@@ -10,6 +10,7 @@ from datetime import datetime
 import pandas as pd
 import unicodedata
 import os
+import math
 
 
 
@@ -263,6 +264,17 @@ def remove_ast(runs):
     num = re.sub(r'\D', " ", str(runs))
     return int(num)
 
+def alter_batting_data(player_data):
+    temp=0
+    for index, row in player_data.iterrows():
+        if not (math.isnan(float(row[10]))):
+            temp=row[10]
+        else:
+            row[10]=temp
+
+    return player_data
+
+
 def read_player_stats(name):
     # words=name.split(" ")
     player_data=''
@@ -271,21 +283,29 @@ def read_player_stats(name):
     player_data.columns = ["Match_Number","Date","Versus","Ground","Dismissed","Runs","Balls_Faced","Strike_Rate","Extra1","Runs_Cumulative","Average","Strike_Rate","Extra2"]
     player_data.Runs=player_data.Runs.replace(to_replace="-", value=0, inplace=False, limit=None, regex=False, method='pad')
     player_data['Runs'] = player_data['Runs'].apply(lambda x: remove_ast(x))
-
-    return player_data
+    player_data1= alter_batting_data(player_data)
+    
+    return player_data1
 
 def total_average_func(player_data):
     averageDF=player_data.tail(n=1)
     average=averageDF['Average'].values[0]
-    return average
+    if not (math.isnan(float(average))):
+        return average
+    else:
+        return 0
     # if (average != 0):
     #     return average
     # else:
     #     return 0
 
 def latest_average_func(player_data):
+    latest_average=0
     latest_average=player_data["Runs"].tail(n=5).mean()
-    return latest_average
+    if not (math.isnan(float(latest_average))):
+        return latest_average
+    else:
+        return 0     
     # if (latest_average != 0):
     #     return latest_average
     # else:
@@ -293,6 +313,7 @@ def latest_average_func(player_data):
 
 def avg_versus_opp_func(player_data,id,team1,team2):
     opposition=''
+    player_ver_opp=0
     team_name=get_team_name(id)
     if(team_name.lower() == team1.lower()):
         opposition=team2
@@ -301,19 +322,26 @@ def avg_versus_opp_func(player_data,id,team1,team2):
     print("opposition is ",opposition)
     player_ver_opp_df=player_data.loc[player_data['Versus'] == opposition]
     player_ver_opp=player_ver_opp_df['Runs'].tail(n=5).mean()
-    if (player_ver_opp != 0):
+    print("player ver opposition is ",player_ver_opp)
+    if not (math.isnan(float(player_ver_opp))):
         return player_ver_opp
     else:
-        return 0
+        return 0     
+    # if (player_ver_opp != 0):
+    #     return player_ver_opp
+    # else:
+    #     return 0
+
 
 def avg_in_ground_func(player_data,venue):
+    player_in_ground=0
     player_in_ground_df=player_data.loc[player_data['Ground']== venue]
     player_in_ground=player_in_ground_df['Runs'].mean()
-    if (player_in_ground != 0):
+
+    if not (math.isnan(float(player_in_ground))):
         return player_in_ground
     else:
         return 0
- 
 
 def find_id_name(id):
     temp_url=f'{player_overview_url}{id}'
@@ -335,7 +363,7 @@ def write_squad_stats(final_squad_objects):
             row=f'{x.name};{x.id};{x.id_name};{x.total_average};{x.latest_average};{x.avg_versus_opp};{x.avg_in_ground};{x.final_batting_score}\n'
             r.write(row)
 
-def get_teams():
+def get_teams(playing_squad_url):
     raw_html5=simple_get(playing_squad_url)
     html5 = BeautifulSoup(raw_html5, 'html.parser')
     name=html5.findAll('h1', attrs={'cb-nav-hdr cb-font-18 line-ht24'})

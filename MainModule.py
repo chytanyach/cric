@@ -59,8 +59,8 @@ if __name__ == "__main__":
 
 	#print("final squad is ",final_squad)
 
-	# final_squad=["Jasprit Bumrah"]
-	teams=get_teams()
+	# final_squad=["Jason Behrendorff"]
+	teams=get_teams(playing_squad_url)
 	team1=teams[0]
 	team2=teams[2].split(",")[0]
 
